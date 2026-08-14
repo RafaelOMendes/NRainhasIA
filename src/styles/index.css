@@ -29,12 +29,20 @@
   --r-md: 17px;
   --r-sm: 11px;
 
-  --blur: 34px;
-  --sat: 200%;
-  --bright: 1.08;
+  --blur: 30px;
+  --sat: 155%;
+  --bright: 1.02;
+  /* Véu escuro dentro do vidro: é o que faz o texto ficar legível sobre a
+     malha colorida, e o que separa "vidro" de "gel colorido". */
+  --scrim: rgba(10, 12, 22, 0.5);
 
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
 
+  /* Largura da lateral e sua folga. O App calcula --side a partir das duas, então
+     mudar aqui num breakpoint reposiciona tabuleiro, dock e toast de uma vez —
+     inclusive zerando o recuo quando a lateral vira folha inferior. */
+  --side-w: 364px;
+  --side-gap: 32px;
   --side: 0px;
 }
 
@@ -43,8 +51,9 @@
   --blur: 0px;
   --sat: 100%;
   --bright: 1;
-  --glass-hi: rgba(22, 25, 38, 0.9);
-  --glass-lo: rgba(14, 16, 26, 0.88);
+  --scrim: rgba(15, 17, 28, 0.94);
+  --glass-hi: rgba(255, 255, 255, 0.07);
+  --glass-lo: rgba(255, 255, 255, 0.02);
 }
 
 * {
@@ -96,19 +105,23 @@ button {
    Fundo — a malha que o vidro refrata
    ============================================================ */
 
+/*
+  A malha é atmosfera, não protagonista: opacidades baixas para o vidro ter o
+  que refratar sem transformar a tela num letreiro de néon.
+*/
 .mesh {
   position: fixed;
   inset: -22%;
   z-index: 0;
   pointer-events: none;
-  filter: blur(56px) saturate(140%);
+  filter: blur(64px) saturate(115%);
 }
 
 .mesh span {
   position: absolute;
   border-radius: 50%;
   mix-blend-mode: screen;
-  opacity: 0.6;
+  opacity: 0.3;
   will-change: transform;
 }
 
@@ -135,7 +148,7 @@ button {
   bottom: -10%;
   background: radial-gradient(circle, #ff3d8b 0%, transparent 68%);
   animation: drift3 31s var(--ease) infinite alternate;
-  opacity: 0.44;
+  opacity: 0.2;
 }
 .mesh .b4 {
   width: 40vmax;
@@ -144,7 +157,7 @@ button {
   bottom: -4%;
   background: radial-gradient(circle, #00d0ff 0%, transparent 68%);
   animation: drift4 26s var(--ease) infinite alternate;
-  opacity: 0.36;
+  opacity: 0.18;
 }
 
 @keyframes drift1 {
@@ -183,7 +196,7 @@ button {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: radial-gradient(125% 95% at 50% 38%, transparent 42%, rgba(0, 0, 0, 0.7) 100%);
+  background: radial-gradient(115% 88% at 50% 40%, transparent 30%, rgba(0, 0, 0, 0.82) 100%);
 }
 
 :root[data-perf='on'] .mesh {
@@ -200,17 +213,18 @@ button {
 .glass {
   position: relative;
   border-radius: var(--r-lg);
+  /* A última camada é o véu escuro — camadas de fundo pintam de trás para frente. */
   background:
-    radial-gradient(150% 130% at 10% -8%, rgba(255, 255, 255, 0.17), transparent 48%),
-    linear-gradient(168deg, var(--glass-hi), var(--glass-lo) 54%, rgba(255, 255, 255, 0.07));
+    radial-gradient(150% 130% at 10% -8%, rgba(255, 255, 255, 0.13), transparent 48%),
+    linear-gradient(168deg, var(--glass-hi), var(--glass-lo) 55%, rgba(255, 255, 255, 0.05)),
+    linear-gradient(var(--scrim), var(--scrim));
   backdrop-filter: blur(var(--blur)) saturate(var(--sat)) brightness(var(--bright));
   -webkit-backdrop-filter: blur(var(--blur)) saturate(var(--sat)) brightness(var(--bright));
   box-shadow:
-    0 34px 90px -30px rgba(0, 0, 0, 0.88),
-    0 10px 28px -14px rgba(0, 0, 0, 0.65),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 0 26px -10px rgba(255, 255, 255, 0.2);
+    0 30px 80px -28px rgba(0, 0, 0, 0.9),
+    0 10px 26px -14px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.07);
   isolation: isolate;
 }
 
@@ -223,14 +237,14 @@ button {
   padding: 1.1px;
   background: conic-gradient(
     from var(--ang),
-    rgba(255, 255, 255, 0.62),
-    rgba(140, 210, 255, 0.34) 12%,
-    rgba(255, 255, 255, 0.05) 26%,
-    rgba(255, 170, 240, 0.28) 40%,
-    rgba(255, 255, 255, 0.5) 52%,
-    rgba(255, 255, 255, 0.04) 72%,
-    rgba(160, 200, 255, 0.3) 88%,
-    rgba(255, 255, 255, 0.62)
+    rgba(255, 255, 255, 0.72),
+    rgba(150, 215, 255, 0.4) 12%,
+    rgba(255, 255, 255, 0.08) 27%,
+    rgba(255, 180, 245, 0.32) 41%,
+    rgba(255, 255, 255, 0.6) 53%,
+    rgba(255, 255, 255, 0.07) 73%,
+    rgba(170, 205, 255, 0.36) 88%,
+    rgba(255, 255, 255, 0.72)
   );
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -277,7 +291,12 @@ button {
   opacity: 1;
 }
 
-/* Brilho fixo: fio de luz no topo e cáustica no pé. */
+/*
+  Curvatura: fio de luz no topo, retorno de luz no pé, e um realce difuso na
+  quina superior esquerda. É o que faz a superfície parecer abaulada em vez de
+  plana — o papel que a refração deslocada tentava cumprir, sem os rasgos que
+  ela provocava nas bordas.
+*/
 .g-gloss {
   position: absolute;
   inset: 0;
@@ -285,20 +304,26 @@ button {
   pointer-events: none;
   z-index: 1;
   background:
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.15), transparent 24%),
-    radial-gradient(85% 55% at 50% 106%, rgba(130, 165, 255, 0.16), transparent 72%);
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.17), transparent 20%),
+    linear-gradient(to top, rgba(255, 255, 255, 0.08), transparent 14%),
+    radial-gradient(130% 100% at 0% 0%, rgba(255, 255, 255, 0.1), transparent 42%),
+    radial-gradient(85% 55% at 50% 106%, rgba(130, 165, 255, 0.13), transparent 72%);
   mix-blend-mode: screen;
 }
 
-/* Refração: o fundo é deslocado por um mapa de ruído só na faixa das bordas. */
+/*
+  Bisel: um anel que desfoca e clareia o fundo mais que o miolo, imitando a
+  espessura do vidro na quina. Fica 10px para dentro da borda justamente para
+  não haver amostragem fora do elemento — a causa dos rasgos anteriores.
+*/
 .g-refract {
   position: absolute;
-  inset: 0;
+  inset: 10px;
   border-radius: inherit;
   pointer-events: none;
   z-index: 0;
-  backdrop-filter: url(#liquid-refract);
-  -webkit-backdrop-filter: url(#liquid-refract);
+  backdrop-filter: blur(calc(var(--blur) * 0.6)) brightness(1.14) saturate(120%);
+  -webkit-backdrop-filter: blur(calc(var(--blur) * 0.6)) brightness(1.14) saturate(120%);
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -307,7 +332,8 @@ button {
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   mask-composite: exclude;
-  padding: 20px;
+  padding: 10px;
+  opacity: 0.75;
 }
 :root[data-perf='on'] .g-refract,
 :root[data-perf='on'] .glass::before {
@@ -427,6 +453,10 @@ button {
     0 0 90px -14px rgba(92, 230, 168, 0.55);
 }
 
+/*
+  O tabuleiro precisa de base própria: com casas a 6% de alpha sobre vidro
+  translúcido, a malha do fundo passava direto e o xadrez sumia.
+*/
 .board {
   position: relative;
   width: 100%;
@@ -436,9 +466,10 @@ button {
   touch-action: none;
   cursor: pointer;
   z-index: 4;
+  background: rgba(6, 8, 16, 0.58);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 2px 12px rgba(0, 0, 0, 0.35);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.09),
+    inset 0 2px 14px rgba(0, 0, 0, 0.45);
 }
 
 .squares {
@@ -452,10 +483,10 @@ button {
   transition: background-color 0.35s var(--ease);
 }
 .sq[data-dark='true'] {
-  background: rgba(255, 255, 255, 0.062);
+  background: rgba(255, 255, 255, 0.11);
 }
 .sq[data-dark='false'] {
-  background: rgba(255, 255, 255, 0.014);
+  background: rgba(255, 255, 255, 0.022);
 }
 
 /* Heatmap: irradia a partir da última casa mexida. */
@@ -542,11 +573,13 @@ button {
   border-radius: 50%;
   display: grid;
   place-items: center;
+  /* O núcleo escuro garante que a coroa branca leia sobre qualquer fundo. */
   background:
-    radial-gradient(115% 95% at 32% 20%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.16) 34%, transparent 62%),
-    linear-gradient(165deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.05) 70%);
-  backdrop-filter: blur(5px) saturate(220%) brightness(1.12);
-  -webkit-backdrop-filter: blur(5px) saturate(220%) brightness(1.12);
+    radial-gradient(115% 95% at 32% 20%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.14) 34%, transparent 62%),
+    linear-gradient(165deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.04) 70%),
+    radial-gradient(circle at 50% 62%, rgba(12, 16, 30, 0.6), rgba(12, 16, 30, 0.3) 72%);
+  backdrop-filter: blur(5px) saturate(160%) brightness(1.05);
+  -webkit-backdrop-filter: blur(5px) saturate(160%) brightness(1.05);
   box-shadow:
     inset 0 1.5px 1px rgba(255, 255, 255, 0.92),
     inset 0 -9px 16px rgba(0, 0, 0, 0.3),
@@ -622,8 +655,9 @@ button {
   position: fixed;
   right: 16px;
   top: 16px;
-  bottom: 16px;
-  width: 364px;
+  width: var(--side-w);
+  /* Altura pelo conteúdo: um painel curto não deve virar uma coluna vazia. */
+  max-height: calc(100vh - 124px);
   z-index: 36;
   border-radius: var(--r-xl);
   display: flex;
@@ -1270,36 +1304,244 @@ input[type='range']::-moz-range-thumb {
 }
 
 /* ============================================================
-   Telas estreitas: a lateral vira folha inferior
+   Responsivo
    ============================================================ */
 
+/* Notebooks: a lateral encolhe para o tabuleiro não ficar espremido. */
+@media (max-width: 1180px) {
+  :root {
+    --side-w: 318px;
+  }
+  .side-scroll {
+    padding: 18px 18px 22px;
+  }
+  .dock-btn {
+    padding: 9px 11px 8px;
+    font-size: 10.5px;
+  }
+}
+
+/* Tablet e abaixo: a lateral vira folha inferior sobre o tabuleiro. */
 @media (max-width: 940px) {
-  .app {
-    --side: 0px !important;
+  :root {
+    --side-w: 0px;
+    --side-gap: 0px;
   }
   .sidebar {
     left: 12px;
     right: 12px;
     top: auto;
-    bottom: 108px;
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px));
     width: auto;
-    max-height: 46vh;
+    max-height: min(52vh, 420px);
+    border-radius: var(--r-lg);
   }
   .stage {
-    padding-bottom: 176px;
+    padding: 0 16px 150px;
+  }
+  .board-frame {
+    width: min(92vw, calc(100vh - 268px));
+    padding: 11px;
+  }
+  .mini-tree {
+    top: auto;
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    left: 12px;
+    width: 190px;
+  }
+  .hud {
+    padding: 14px 16px 2px;
+  }
+}
+
+/* Celular: dock só com ícones, sem rótulos nem punho. */
+@media (max-width: 700px) {
+  :root {
+    --r-xl: 26px;
+    --r-lg: 20px;
+    --blur: 24px;
+  }
+  .brand small {
+    display: none;
+  }
+  .brand h1 {
+    font-size: 15px;
+  }
+  .hud-right .badge {
+    display: none;
+  }
+  .dock-wrap {
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 16px);
+  }
+  .dock {
+    padding: 7px;
+    gap: 1px;
+    border-radius: 22px;
+  }
+  .dock-grip,
+  .tray-count {
+    display: none;
+  }
+  .dock-btn {
+    padding: 9px;
+    font-size: 0; /* some o rótulo, fica o ícone */
+    gap: 0;
+    border-radius: 15px;
+  }
+  .dock-btn svg {
+    width: 21px;
+    height: 21px;
+  }
+  .dock-pill {
+    border-radius: 15px;
+  }
+  .tray {
+    padding: 0 4px 0 0;
+  }
+  .tray-stack {
+    width: 36px;
+    height: 36px;
+  }
+  .dock-sep {
+    margin: 5px 4px;
+  }
+  .stage {
+    padding: 0 12px 128px;
+  }
+  .board-frame {
+    width: min(94vw, calc(100vh - 232px));
+    padding: 9px;
+  }
+  .sidebar {
+    left: 8px;
+    right: 8px;
+    bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+    /* A folha cobre o tabuleiro de propósito, como uma sheet do iOS — mas
+       deixa a parte de cima dele à vista para o contexto não se perder. */
+    max-height: min(48vh, 380px);
+  }
+  .side-scroll {
+    padding: 16px 16px 20px;
   }
   .mini-tree {
     display: none;
   }
-  .dock {
-    overflow-x: auto;
-    max-width: calc(100vw - 24px);
+  .status-line {
+    font-size: 12px;
+    gap: 9px;
   }
-  .dock-btn {
-    padding: 8px 10px;
+  .stats {
+    grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
   }
+  .sol-grid {
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  }
+}
+
+/*
+  Celular deitado: sobra altura nenhuma, então a lateral volta a ser lateral e o
+  tabuleiro manda na largura. Os seletores levam `.app` de propósito — precisam
+  vencer as regras de largura que aparecem depois no arquivo.
+*/
+@media (max-height: 560px) and (orientation: landscape) {
+  :root {
+    --side-w: min(44vw, 330px);
+    --side-gap: 16px;
+  }
+  .hud {
+    padding: 8px 16px 0;
+    padding-right: calc(16px + var(--side));
+  }
+  /* O breakpoint de tablet usa `padding` abreviado e zeraria o recuo da lateral. */
+  .app .stage {
+    padding: 0 16px 92px;
+    padding-right: calc(16px + var(--side));
+  }
+  .app .board-frame {
+    width: min(52vw, calc(100vh - 128px));
+    padding: 8px;
+  }
+  .status-line {
+    display: none;
+  }
+  /* Sem altura para rótulos: dock só com ícones, como no celular em pé. */
+  .dock-grip,
   .tray-count {
     display: none;
+  }
+  .dock {
+    padding: 7px;
+    gap: 1px;
+    border-radius: 22px;
+  }
+  .dock-btn {
+    padding: 9px;
+    font-size: 0;
+    gap: 0;
+    border-radius: 15px;
+  }
+  .dock-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+  .dock-pill {
+    border-radius: 15px;
+  }
+  .tray-stack {
+    width: 34px;
+    height: 34px;
+  }
+  .app .sidebar {
+    top: 8px;
+    bottom: auto;
+    right: 8px;
+    left: auto;
+    width: var(--side-w);
+    max-height: calc(100vh - 16px);
+    border-radius: var(--r-lg);
+  }
+  .dock-wrap {
+    bottom: 8px;
+  }
+  .mini-tree {
+    display: none;
+  }
+}
+
+/* Telas muito estreitas: o dock rola em vez de estourar a janela. */
+@media (max-width: 380px) {
+  .dock {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .dock::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Barra de endereço do celular muda a altura da janela: dvh acompanha, vh não. */
+@supports (height: 100dvh) {
+  html,
+  body,
+  #root {
+    height: 100dvh;
+  }
+  @media (max-width: 940px) {
+    .board-frame {
+      width: min(92vw, calc(100dvh - 268px));
+    }
+  }
+  @media (max-width: 700px) {
+    .board-frame {
+      width: min(94vw, calc(100dvh - 232px));
+    }
+  }
+  /* Só na lateral de verdade — na folha inferior a altura é a do breakpoint. */
+  @media (min-width: 941px) {
+    .sidebar {
+      max-height: calc(100dvh - 124px);
+    }
   }
 }
 
@@ -1307,5 +1549,11 @@ input[type='range']::-moz-range-thumb {
   .mesh span,
   .glass::before {
     animation: none;
+  }
+  .board-frame,
+  .stage,
+  .hud,
+  .dock-wrap {
+    transition: none;
   }
 }

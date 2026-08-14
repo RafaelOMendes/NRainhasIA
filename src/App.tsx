@@ -26,8 +26,6 @@ import { PanelTree } from './components/panels/PanelTree';
 
 type Cell = { row: number; col: number } | null;
 
-const SIDEBAR_W = 396;
-
 export default function App() {
   const board = useBoard(8);
   const { n, queens, place, move, remove, clear, setAssignment, undo, redo, setN } = board;
@@ -418,8 +416,16 @@ export default function App() {
     <>
       <MeshBackground />
 
-      {/* Em telas estreitas o CSS zera --side e a lateral vira folha inferior. */}
-      <div className="app" style={{ '--side': panel ? `${SIDEBAR_W}px` : '0px' } as CSSProperties}>
+      {/*
+        --side é a largura da lateral mais as margens; o CSS ajusta --side-w por
+        breakpoint e zera --side quando a lateral vira folha inferior.
+      */}
+      <div
+        className="app"
+        style={
+          { '--side': panel ? 'calc(var(--side-w) + var(--side-gap))' : '0px' } as CSSProperties
+        }
+      >
         <header className="hud">
           <div className="brand">
             <h1>N Rainhas</h1>

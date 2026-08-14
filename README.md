@@ -95,18 +95,43 @@ quadro chega.
 
 O `backdrop-filter` sozinho dá aparência fosca, não de vidro. São cinco camadas por superfície:
 
-1. **Refração de borda** — o fundo é deslocado por um mapa de ruído (`feDisplacementMap`) numa
-   faixa de 20px junto às quinas. Três deslocamentos com escalas diferentes, recombinados por
-   canal RGB, produzem a franja colorida que o vidro real cria.
-2. **Tinta** — gradiente linear + radial, com `saturate(200%)` e um leve `brightness`.
-3. **Gloss** — fio de luz no topo e cáustica no pé, em `mix-blend-mode: screen`.
-4. **Aro** — gradiente cônico com dispersão cromática recortado por máscara, girando em 22s
-   via `@property --ang` (o único jeito de animar um ângulo em CSS).
+1. **Véu** — uma demão escura por baixo de tudo. É o que separa "vidro" de "gel colorido" e o
+   que mantém o texto legível sobre um fundo colorido.
+2. **Tinta** — gradiente linear + radial com `saturate(155%)`.
+3. **Bisel** — um anel que desfoca e clareia o fundo mais que o miolo, imitando a espessura do
+   vidro na quina. Fica 10px **para dentro** da borda, por um motivo específico (abaixo).
+4. **Aro** — gradiente cônico com dispersão cromática recortado por máscara, girando em 22s via
+   `@property --ang` (o único jeito de animar um ângulo em CSS).
 5. **Especular** — ponto quente + bloom largo seguindo o ponteiro, escritos como variáveis CSS
    por um único listener global.
 
-Nada disso aparece sobre fundo liso — daí a malha de gradientes em movimento por trás de tudo.
+**Por que não há refração deslocada.** A primeira versão usava `backdrop-filter: url(#filtro)`
+com `feDisplacementMap` numa faixa colada na borda. O resultado foram bordas rasgadas: o
+deslocamento amostra pixels a até 15px de distância, e o backdrop é recortado nos limites do
+elemento — junto à borda simplesmente não existe fundo para amostrar. A recombinação em três
+canais RGB triplicava o artefato. Isso é intrínseco à técnica naquela posição; o bisel inset
+cumpre o mesmo papel visual sem ter como rasgar.
+
+Nada disso aparece sobre fundo liso — daí a malha de gradientes em movimento por trás de tudo,
+em opacidade baixa: ela é atmosfera, não protagonista.
 
 As casas do tabuleiro **não** usam `backdrop-filter`: centenas de superfícies desfocadas ao
-mesmo tempo derrubam o FPS. Elas imitam o efeito com gradiente e máscara. O modo performance,
-no painel Tabuleiro, desliga desfoque, refração e aro de uma vez.
+mesmo tempo derrubam o FPS. Elas ficam sobre uma base própria semiopaca — sem ela a malha
+atravessava o vidro e o xadrez sumia num degradê. O modo performance, no painel Tabuleiro,
+desliga desfoque, bisel e aro de uma vez.
+
+### Responsivo
+
+Quatro faixas, todas verificadas medindo a geometria real (nada se sobrepõe, nada estoura):
+
+| faixa | lateral | dock | tabuleiro |
+| --- | --- | --- | --- |
+| ≥1180px | 364px à direita | ícones + rótulos | até 620px |
+| 940–1180px | 318px | rótulos menores | limitado pela altura |
+| ≤940px | folha inferior | rótulos menores | 92vw |
+| ≤700px | folha inferior | só ícones | 94vw |
+| paisagem baixa | volta a ser lateral | só ícones | 52vw |
+
+O recuo do tabuleiro sai de `--side`, calculado a partir de `--side-w` e `--side-gap`: mudar a
+largura da lateral num breakpoint reposiciona tabuleiro, dock e toast de uma vez. Alturas usam
+`dvh` quando disponível, para a barra de endereço do celular não cortar o dock.
