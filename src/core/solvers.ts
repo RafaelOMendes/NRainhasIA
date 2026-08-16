@@ -7,7 +7,7 @@ export const SOLVERS: SolverMeta[] = [
     short: 'BT',
     blurb:
       'Percorre as colunas na ordem e testa cada linha. Ao bater num conflito volta atrás. Exaustivo, correto e ingênuo.',
-    color: '#7aa2ff',
+    color: '#6e8bff',
   },
   {
     id: 'forward-checking',
@@ -15,7 +15,7 @@ export const SOLVERS: SolverMeta[] = [
     short: 'FC',
     blurb:
       'A cada rainha colocada elimina as casas atacadas dos domínios futuros. Se alguma coluna fica sem opção, desiste na hora.',
-    color: '#5ce6a8',
+    color: '#3ecf8e',
   },
   {
     id: 'mrv',
@@ -23,7 +23,7 @@ export const SOLVERS: SolverMeta[] = [
     short: 'MRV',
     blurb:
       'Forward checking que sempre ataca primeiro a coluna com menos opções. "Falhe rápido" — poda a árvore muito antes.',
-    color: '#c58cff',
+    color: '#a78bfa',
   },
   {
     id: 'min-conflicts',
@@ -31,7 +31,7 @@ export const SOLVERS: SolverMeta[] = [
     short: 'MC',
     blurb:
       'Busca local: começa com o tabuleiro cheio e vai movendo a rainha mais encrencada para a linha menos atacada.',
-    color: '#ffb46b',
+    color: '#efa85c',
   },
 ];
 

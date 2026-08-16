@@ -2,11 +2,11 @@ import { useMemo } from 'react';
 import type { TreeNode } from '../core/types';
 
 const COLOR: Record<TreeNode['status'], string> = {
-  open: 'rgba(255,255,255,0.4)',
-  placed: '#7aa2ff',
-  rejected: 'rgba(255,107,127,0.6)',
-  failed: 'rgba(255,255,255,0.16)',
-  solution: '#5ce6a8',
+  open: 'rgba(255,255,255,0.34)',
+  placed: '#6e8bff',
+  rejected: 'rgba(242,96,122,0.62)',
+  failed: 'rgba(255,255,255,0.14)',
+  solution: '#3ecf8e',
 };
 
 const VB_W = 1000;
@@ -78,7 +78,7 @@ export function SearchTree({
                 y1={b.y}
                 x2={a.x}
                 y2={a.y}
-                stroke={solved ? 'rgba(92,230,168,0.55)' : 'rgba(255,255,255,0.09)'}
+                stroke={solved ? 'rgba(62,207,142,0.55)' : 'rgba(255,255,255,0.08)'}
                 strokeWidth={solved ? 2 : 1}
               />
             );

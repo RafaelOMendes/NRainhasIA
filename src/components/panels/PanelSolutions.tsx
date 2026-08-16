@@ -14,11 +14,11 @@ function Thumb({ sol, n }: { sol: Assignment; n: number }) {
         const r = Math.floor(i / n);
         const c = i % n;
         return (r + c) % 2 === 1 ? (
-          <rect key={i} x={c} y={r} width={1} height={1} fill="rgba(255,255,255,0.07)" />
+          <rect key={i} x={c} y={r} width={1} height={1} fill="rgba(255,255,255,0.06)" />
         ) : null;
       })}
       {sol.map((r, c) => (
-        <circle key={c} cx={c + 0.5} cy={r + 0.5} r={0.3} fill="#9db9ff" />
+        <circle key={c} cx={c + 0.5} cy={r + 0.5} r={0.29} fill="#8aa1ff" />
       ))}
     </svg>
   );

@@ -12,9 +12,7 @@ import { useSolverRunner } from './hooks/useSolverRunner';
 import { useSolverWorker } from './hooks/useSolverWorker';
 import { Board, type BoardHandle } from './components/Board';
 import { Dock, type PanelId } from './components/Dock';
-import { GlassLayers } from './components/Glass';
 import { IconRedo, IconTrash, IconUndo } from './components/Icons';
-import { MeshBackground } from './components/MeshBackground';
 import { SearchTree } from './components/SearchTree';
 import { Sidebar } from './components/Sidebar';
 import { PanelBoard } from './components/panels/PanelBoard';
@@ -33,7 +31,6 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panel, setPanel] = useState<PanelId | null>('board');
   const [showHeat, setShowHeat] = useState(true);
-  const [perf, setPerf] = useState(false);
   const [algo, setAlgo] = useState<SolverId>('backtracking');
   const [fromHere, setFromHere] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
@@ -75,23 +72,6 @@ export default function App() {
   }, []);
 
   /* ---------------- efeitos ---------------- */
-
-  useEffect(() => {
-    document.documentElement.dataset.perf = perf ? 'on' : 'off';
-  }, [perf]);
-
-  // Reflexo especular acompanhando o ponteiro em cada superfície de vidro.
-  useEffect(() => {
-    const onMove = (e: PointerEvent) => {
-      const el = (e.target as HTMLElement | null)?.closest?.('.glass') as HTMLElement | null;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      el.style.setProperty('--mx', `${e.clientX - r.left}px`);
-      el.style.setProperty('--my', `${e.clientY - r.top}px`);
-    };
-    window.addEventListener('pointermove', onMove, { passive: true });
-    return () => window.removeEventListener('pointermove', onMove);
-  }, []);
 
   const challengeRef = useRef(challenge);
   challengeRef.current = challenge;
@@ -347,8 +327,6 @@ export default function App() {
             canRedo={board.canRedo}
             showHeat={showHeat}
             setShowHeat={setShowHeat}
-            perf={perf}
-            setPerf={setPerf}
             disabled={runner.busy}
           />
         );
@@ -414,8 +392,6 @@ export default function App() {
 
   return (
     <>
-      <MeshBackground />
-
       {/*
         --side é a largura da lateral mais as margens; o CSS ajusta --side-w por
         breakpoint e zera --side quando a lateral vira folha inferior.
@@ -456,8 +432,7 @@ export default function App() {
 
         <main className="stage">
           <div className="board-wrap">
-            <div className={`glass board-frame ${solved ? 'solved' : ''}`}>
-              <GlassLayers />
+            <div className={`surface board-frame ${solved ? 'solved' : ''}`}>
               <Board
                 n={n}
                 queens={queens}
@@ -516,13 +491,12 @@ export default function App() {
         <AnimatePresence>
           {runner.busy && panel !== 'tree' && runner.tree.length > 0 && (
             <motion.aside
-              className="glass mini-tree"
-              initial={{ opacity: 0, x: -30, filter: 'blur(10px)' }}
-              animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, x: -30, filter: 'blur(10px)' }}
-              transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+              className="surface mini-tree"
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ type: 'spring', stiffness: 360, damping: 32 }}
             >
-              <GlassLayers />
               <h3>Árvore de busca</h3>
               <SearchTree nodes={runner.tree} height={104} limit={700} />
             </motion.aside>
@@ -532,14 +506,13 @@ export default function App() {
         <AnimatePresence>
           {toast && (
             <motion.div
-              className="glass toast"
-              initial={{ opacity: 0, y: -18, filter: 'blur(10px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -14, filter: 'blur(10px)' }}
-              transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+              className="surface toast"
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 34 }}
             >
-              <GlassLayers gloss={false} />
-              <span>{toast}</span>
+              {toast}
             </motion.div>
           )}
         </AnimatePresence>

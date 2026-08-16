@@ -379,9 +379,9 @@ export function Board(props: BoardProps) {
                   y1={y1}
                   x2={x2}
                   y2={y2}
-                  stroke="rgba(122,162,255,0.42)"
+                  stroke="rgba(110,139,255,0.4)"
                   strokeWidth={1.5}
-                  strokeDasharray="5 7"
+                  strokeDasharray="4 7"
                 />
               ));
             })()}
@@ -401,9 +401,9 @@ export function Board(props: BoardProps) {
               width: cell,
               height: cell,
             }}
-            initial={{ opacity: 0.85, scale: 0.65 }}
-            animate={{ opacity: 0, scale: 1.15 }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+            initial={{ opacity: 0.5 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 0.42, ease: 'easeOut' }}
           />
         )}
       </AnimatePresence>
@@ -435,14 +435,14 @@ export function Board(props: BoardProps) {
               position: 'absolute',
               inset: 0,
               pointerEvents: 'none',
-              zIndex: 7,
+              zIndex: 5,
               background:
-                'radial-gradient(circle at 50% 50%, rgba(92,230,168,0.35), transparent 62%)',
+                'radial-gradient(circle at 50% 50%, rgba(62,207,142,0.28), transparent 62%)',
             }}
-            initial={{ opacity: 0, scale: 0.7 }}
-            animate={{ opacity: [0, 0.9, 0], scale: [0.7, 1.25, 1.6] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.85, 0] }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.1, ease: 'easeOut' }}
+            transition={{ duration: 0.9, ease: 'easeOut' }}
           />
         )}
       </AnimatePresence>

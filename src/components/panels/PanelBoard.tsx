@@ -13,8 +13,6 @@ export interface PanelBoardProps {
   canRedo: boolean;
   showHeat: boolean;
   setShowHeat: (v: boolean) => void;
-  perf: boolean;
-  setPerf: (v: boolean) => void;
   disabled: boolean;
 }
 
@@ -72,21 +70,24 @@ export function PanelBoard(p: PanelBoardProps) {
           </div>
         </div>
 
-        <div className="row spread">
-          <Switch checked={p.showHeat} onChange={p.setShowHeat}>
-            Heatmap de ameaças
-          </Switch>
-          <Switch checked={p.perf} onChange={p.setPerf}>
-            Modo performance (desliga o desfoque)
-          </Switch>
-        </div>
+        <Switch checked={p.showHeat} onChange={p.setShowHeat}>
+          Heatmap de ameaças
+        </Switch>
 
-        <p className="hint">
-          <b>Arraste</b> uma rainha para movê-la, ou <b>clique nela e clique no destino</b> — os dois
-          gestos funcionam. Arraste para fora do tabuleiro para remover. Teclado:{' '}
-          <kbd>←↑→↓</kbd> move o cursor, <kbd>Enter</kbd> coloca ou pega, <kbd>Delete</kbd> remove,{' '}
-          <kbd>Esc</kbd> desmarca, <kbd>Ctrl+Z</kbd> desfaz.
-        </p>
+        <div className="col" style={{ gap: 8 }}>
+          <p className="hint">
+            <b>Arraste</b> uma rainha para movê-la, ou <b>clique nela e clique no destino</b> — os
+            dois gestos funcionam. Arraste para fora do tabuleiro para remover, ou puxe uma peça
+            nova do reservatório no menu de baixo.
+          </p>
+          <p className="hint">
+            No menu de baixo, <b>arraste de lado</b> para percorrer as abas sem soltar.
+          </p>
+          <p className="hint">
+            Teclado: <kbd>←↑→↓</kbd> move o cursor, <kbd>Enter</kbd> coloca ou pega,{' '}
+            <kbd>Delete</kbd> remove, <kbd>Esc</kbd> desmarca, <kbd>Ctrl+Z</kbd> desfaz.
+          </p>
+        </div>
       </div>
     </>
   );

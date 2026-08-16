@@ -1,15 +1,6 @@
-import { motion, useMotionValue } from 'motion/react';
-import { useEffect, useRef, useState, type PointerEvent as RPointerEvent, type ReactNode } from 'react';
-import { GlassLayers } from './Glass';
-import {
-  IconBolt,
-  IconClock,
-  IconGrid,
-  IconGrip,
-  IconPlay,
-  IconSparkle,
-  IconTree,
-} from './Icons';
+import { motion } from 'motion/react';
+import { useRef, type PointerEvent as RPointerEvent, type ReactNode } from 'react';
+import { IconBolt, IconClock, IconGrid, IconPlay, IconSparkle, IconTree } from './Icons';
 import { QueenTray, type QueenTrayProps } from './QueenTray';
 
 export type PanelId = 'board' | 'solver' | 'race' | 'tree' | 'solutions' | 'challenge';
@@ -23,7 +14,8 @@ const ITEMS: { id: PanelId; label: string; Icon: (p: { className?: string }) => 
   { id: 'challenge', label: 'Desafio', Icon: IconClock },
 ];
 
-const POS_KEY = 'nrainhas.dock-pos';
+/** Folga vertical para o dedo não precisar ficar preso na altura do botão. */
+const SCRUB_SLOP = 26;
 
 export function Dock({
   active,
@@ -34,115 +26,75 @@ export function Dock({
   onChange: (id: PanelId | null) => void;
   tray: QueenTrayProps;
 }) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const [moving, setMoving] = useState(false);
-  const grab = useRef<{ id: number; ox: number; oy: number } | null>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const buttons = useRef(new Map<PanelId, HTMLButtonElement>());
+  const scrub = useRef<{ pointerId: number; movedAway: boolean } | null>(null);
+  /* Depois de arrastar, o navegador ainda dispara um clique no botão de origem —
+     este sinalizador impede que esse clique desfaça a aba escolhida no arraste. */
+  const swallowClick = useRef(false);
 
-  // Posição escolhida pelo usuário sobrevive ao recarregar.
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(POS_KEY);
-      if (!raw) return;
-      const p = JSON.parse(raw) as { x: number; y: number };
-      x.set(p.x ?? 0);
-      y.set(p.y ?? 0);
-    } catch {
-      /* localStorage pode estar bloqueado */
+  const idAt = (x: number, y: number): PanelId | null => {
+    for (const [id, el] of buttons.current) {
+      const r = el.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top - SCRUB_SLOP && y <= r.bottom + SCRUB_SLOP) {
+        return id;
+      }
     }
-  }, [x, y]);
-
-  /** Mantém o dock dentro da janela, com uma folga de 12px. */
-  const clamp = () => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const cx = x.get();
-    const cy = y.get();
-    // Posição de repouso (sem o deslocamento aplicado).
-    const restLeft = r.left - cx;
-    const restTop = r.top - cy;
-    const minX = 12 - restLeft;
-    const maxX = window.innerWidth - 12 - r.width - restLeft;
-    const minY = 12 - restTop;
-    const maxY = window.innerHeight - 12 - r.height - restTop;
-    x.set(Math.min(Math.max(cx, minX), Math.max(minX, maxX)));
-    y.set(Math.min(Math.max(cy, minY), Math.max(minY, maxY)));
+    return null;
   };
 
-  const save = () => {
+  const onPointerDown = (e: RPointerEvent<HTMLElement>) => {
+    // O reservatório de rainhas tem o arraste dele; não é alvo de troca de aba.
+    if (!(e.target as HTMLElement).closest('.dock-btn')) return;
+    scrub.current = { pointerId: e.pointerId, movedAway: false };
     try {
-      localStorage.setItem(POS_KEY, JSON.stringify({ x: x.get(), y: y.get() }));
+      navRef.current?.setPointerCapture(e.pointerId);
     } catch {
-      /* ignora */
+      /* ponteiros sintéticos não podem ser capturados */
     }
   };
 
-  useEffect(() => {
-    const onResize = () => clamp();
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-    // `clamp` só usa refs e motion values, que são estáveis.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const onPointerMove = (e: RPointerEvent<HTMLElement>) => {
+    const s = scrub.current;
+    if (!s || s.pointerId !== e.pointerId) return;
+    const over = idAt(e.clientX, e.clientY);
+    if (!over || over === active) return;
+    s.movedAway = true;
+    onChange(over);
+  };
 
-  const gripDown = (e: RPointerEvent<HTMLDivElement>) => {
-    grab.current = { id: e.pointerId, ox: e.clientX - x.get(), oy: e.clientY - y.get() };
+  const onPointerUp = (e: RPointerEvent<HTMLElement>) => {
+    const s = scrub.current;
+    if (!s || s.pointerId !== e.pointerId) return;
+    scrub.current = null;
+    if (s.movedAway) swallowClick.current = true;
     try {
-      e.currentTarget.setPointerCapture(e.pointerId);
+      navRef.current?.releasePointerCapture(e.pointerId);
     } catch {
-      /* ignora */
+      /* já liberado */
     }
-    setMoving(true);
   };
 
-  const gripMove = (e: RPointerEvent<HTMLDivElement>) => {
-    const g = grab.current;
-    if (!g || g.id !== e.pointerId) return;
-    x.set(e.clientX - g.ox);
-    y.set(e.clientY - g.oy);
-  };
-
-  const gripUp = (e: RPointerEvent<HTMLDivElement>) => {
-    if (grab.current?.id !== e.pointerId) return;
-    grab.current = null;
-    setMoving(false);
-    clamp();
-    save();
-  };
-
-  const reset = () => {
-    x.set(0);
-    y.set(0);
-    save();
+  /* O clique continua sendo o caminho do toque simples e do teclado. */
+  const onClick = (id: PanelId) => {
+    if (swallowClick.current) {
+      swallowClick.current = false;
+      return;
+    }
+    onChange(active === id ? null : id);
   };
 
   return (
-    <motion.div ref={wrapRef} className="dock-wrap" style={{ x, y }}>
+    <div className="dock-wrap">
       <motion.nav
-        className="glass dock"
+        ref={navRef}
+        className="surface dock"
         aria-label="Ferramentas"
-        animate={{ scale: moving ? 1.03 : 1 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
       >
-        <GlassLayers />
-
-        <div
-          className="dock-grip"
-          data-dragging={moving}
-          onPointerDown={gripDown}
-          onPointerMove={gripMove}
-          onPointerUp={gripUp}
-          onPointerCancel={gripUp}
-          onDoubleClick={reset}
-          title="Arraste para mover o menu · duplo clique volta ao centro"
-          role="button"
-          aria-label="Mover o menu"
-        >
-          <IconGrip />
-        </div>
-
         <QueenTray {...tray} />
 
         <div className="dock-sep" />
@@ -150,9 +102,13 @@ export function Dock({
         {ITEMS.map(({ id, label, Icon }) => (
           <button
             key={id}
+            ref={(el) => {
+              if (el) buttons.current.set(id, el);
+              else buttons.current.delete(id);
+            }}
             className="dock-btn"
             data-active={active === id}
-            onClick={() => onChange(active === id ? null : id)}
+            onClick={() => onClick(id)}
             aria-pressed={active === id}
           >
             {active === id && (
@@ -167,6 +123,6 @@ export function Dock({
           </button>
         ))}
       </motion.nav>
-    </motion.div>
+    </div>
   );
 }

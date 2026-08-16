@@ -1,20 +1,76 @@
 # N Rainhas · IA
 
-Releitura visual do problema das N rainhas: tabuleiro em *liquid glass*, peças que
-respondem a arrastar **ou** a clicar-e-clicar, e quatro algoritmos de busca que você
-pode assistir trabalhando quadro a quadro.
+Releitura visual do problema das N rainhas: interface escura e sóbria, peças que respondem a
+arrastar **ou** a clicar-e-clicar, e quatro algoritmos de busca que você pode assistir
+trabalhando quadro a quadro.
 
-## Rodar
+> **O problema.** Posicionar N rainhas num tabuleiro N×N sem que nenhuma ataque outra —
+> ou seja, sem duas na mesma linha, coluna ou diagonal. Para N=8 existem 92 soluções, que
+> se reduzem a 12 quando você descarta as que são a mesma coisa girada ou espelhada.
+
+## Como rodar
+
+Requer [Node.js](https://nodejs.org) 20 ou superior (testado no 24). Nenhuma outra
+dependência — o app roda inteiro no navegador, sem back-end.
+
+**1. Instalar as dependências** (só na primeira vez):
 
 ```bash
 npm install
 ```
 
+**2. Subir o servidor de desenvolvimento:**
+
 ```bash
 npm run dev
 ```
 
-`npm run build` gera o pacote de produção; `npm run check` roda só o TypeScript.
+Abra o endereço que o Vite imprimir no terminal, normalmente `http://localhost:5173`.
+O app já começa utilizável: clique numa casa para pôr a primeira rainha.
+
+**Outros comandos:**
+
+| comando | o que faz |
+| --- | --- |
+| `npm run dev` | servidor de desenvolvimento com recarga automática |
+| `npm run build` | verifica os tipos e gera o pacote de produção em `dist/` |
+| `npm run preview` | serve o `dist/` já construído, para conferir o build |
+| `npm run check` | roda só o TypeScript, sem gerar nada |
+
+Para publicar, o conteúdo de `dist/` é estático: serve em qualquer hospedagem de
+arquivos (GitHub Pages, Netlify, Vercel). O `base` do Vite já está como `'./'`, então
+funciona também a partir de um subdiretório.
+
+## Como funciona, em resumo
+
+Você monta o tabuleiro à mão e pede para a IA resolver — em câmera lenta, para ver o
+raciocínio, ou instantaneamente.
+
+**O ciclo típico:** clique em algumas casas para colocar rainhas (o tabuleiro acende em
+vermelho as casas ameaçadas, então dá para ver o estrago de cada peça). Abra o painel
+**Solver** no menu de baixo e clique em *Iniciar busca*: as rainhas passam a se posicionar
+sozinhas, e você vê o algoritmo tentar uma casa, bater num conflito, e voltar atrás. O
+controle de velocidade vai de 1 passo por segundo até turbo. Se preferir a resposta pronta,
+*Resolver agora* completa o tabuleiro respeitando as rainhas que você já pôs — ou avisa que
+aquela configuração não fecha de jeito nenhum.
+
+**As quatro estratégias** que você pode assistir, em ordem de esperteza:
+
+- **Backtracking** — testa as linhas na ordem e volta atrás no primeiro conflito.
+- **Forward Checking** — ao colocar uma rainha, já risca as casas que ela ataca no futuro,
+  e desiste do ramo assim que alguma coluna fica sem nenhuma opção.
+- **MRV + Forward Checking** — o mesmo, mas atacando sempre a coluna com menos opções
+  restantes. É a estratégia do "falhe rápido", e a diferença é gritante (veja a tabela da
+  Corrida abaixo).
+- **Min-Conflicts** — muda de filosofia: começa com o tabuleiro cheio, de qualquer jeito, e
+  vai movendo a rainha mais encrencada para a linha menos atacada até sobrar conflito nenhum.
+  Resolve N=120 em poucos milissegundos.
+
+**Por dentro,** os quatro algoritmos são escritos como *geradores*: em vez de devolver a
+resposta, eles emitem eventos (`tentei`, `coloquei`, `rejeitei`, `voltei atrás`). Quem
+consome decide o ritmo — a tela consome devagar para animar, e um Web Worker consome a toda
+velocidade para a Corrida. Isso é o que evita ter duas implementações do mesmo algoritmo
+para manter em sincronia.
 
 ## O que dá para fazer
 
@@ -24,14 +80,15 @@ uma distância limite de 6px no `pointermove`. Arrastar para fora do tabuleiro r
 O heatmap acende cada casa proporcionalmente ao número de rainhas que a atacam, irradiando
 a partir da última casa mexida.
 
-**Dock.** O menu flutuante da base tem um reservatório de rainhas do lado esquerdo: puxe uma
-peça de lá e solte numa casa do tabuleiro — a casa alvo acende enquanto você arrasta. E o
-próprio dock é móvel: arraste pelo punho (⠿) para colocá-lo onde quiser, com duplo clique
-para devolver ao centro. A posição fica salva.
+**Dock.** O menu da base tem um reservatório de rainhas do lado esquerdo: puxe uma peça de lá e
+solte numa casa do tabuleiro — a casa alvo acende enquanto você arrasta. Nas abas, além de
+clicar, dá para **arrastar de lado sem soltar** e percorrer os painéis, como quem passa o dedo
+por um seletor. O clique fantasma que o navegador dispara no fim do arraste é engolido, para
+não desfazer a aba que você acabou de escolher.
 
-**Menu lateral.** As opções de cada aba abrem numa lateral direita de vidro; o tabuleiro se
-desloca para continuar centralizado no espaço que sobra. Em telas estreitas a lateral vira
-uma folha inferior automaticamente.
+**Menu lateral.** As opções de cada aba abrem numa lateral direita; o tabuleiro se desloca para
+continuar centralizado no espaço que sobra. Em telas estreitas a lateral vira uma folha
+inferior automaticamente.
 
 **Solver animado.** Backtracking, Forward Checking, MRV+FC e Min-Conflicts, com play/pause,
 passo a passo e velocidade de 1 passo/s até turbo. Dá para ver a rainha ser colocada, a casa
@@ -73,8 +130,8 @@ src/
     solutions.ts   enumeração por bitmask e simetrias D4
   workers/       o worker que faz o trabalho pesado fora da main thread
   hooks/         estado do tabuleiro (com undo/redo), motor de animação, corrida…
-  components/    tabuleiro, dock flutuante, menu lateral, árvore, painéis
-  styles/        o sistema de vidro
+  components/    tabuleiro, dock, menu lateral, árvore, painéis
+  styles/        tokens e componentes visuais, num arquivo só
 ```
 
 ### Duas decisões que moldam o resto
@@ -91,43 +148,38 @@ E como o navegador estrangula o `requestAnimationFrame` em aba de segundo plano 
 faria a busca parar em silêncio —, um watchdog em `setInterval` assume o passo quando nenhum
 quadro chega.
 
-### Sobre o vidro
+### O sistema visual
 
-O `backdrop-filter` sozinho dá aparência fosca, não de vidro. São cinco camadas por superfície:
+Escuro, sóbrio, tudo opaco. Três níveis de superfície (`--surface`, `--surface-2`, `--surface-3`)
+separados por uma linha de 1px a 7% de branco, um acento só (índigo `#6e8bff`), verde e vermelho
+reservados para "resolvido" e "conflito". Sombras contidas, raios de 8/12/16px, números em
+algarismos tabulares. Peças claras com a coroa vazada em escuro, sobre casas de contraste
+suficiente para o xadrez se ler de longe.
 
-1. **Véu** — uma demão escura por baixo de tudo. É o que separa "vidro" de "gel colorido" e o
-   que mantém o texto legível sobre um fundo colorido.
-2. **Tinta** — gradiente linear + radial com `saturate(155%)`.
-3. **Bisel** — um anel que desfoca e clareia o fundo mais que o miolo, imitando a espessura do
-   vidro na quina. Fica 10px **para dentro** da borda, por um motivo específico (abaixo).
-4. **Aro** — gradiente cônico com dispersão cromática recortado por máscara, girando em 22s via
-   `@property --ang` (o único jeito de animar um ângulo em CSS).
-5. **Especular** — ponto quente + bloom largo seguindo o ponteiro, escritos como variáveis CSS
-   por um único listener global.
+**Não há um único `backdrop-filter`, máscara ou blend mode no projeto** — e isso é
+deliberado, não só estético. As versões anteriores tentaram *liquid glass* e todas
+serrilhavam as bordas arredondadas dos painéis. As causas, em ordem de descoberta:
 
-**Por que não há refração deslocada.** A primeira versão usava `backdrop-filter: url(#filtro)`
-com `feDisplacementMap` numa faixa colada na borda. O resultado foram bordas rasgadas: o
-deslocamento amostra pixels a até 15px de distância, e o backdrop é recortado nos limites do
-elemento — junto à borda simplesmente não existe fundo para amostrar. A recombinação em três
-canais RGB triplicava o artefato. Isso é intrínseco à técnica naquela posição; o bisel inset
-cumpre o mesmo papel visual sem ter como rasgar.
+1. `backdrop-filter: url(#filtro)` com `feDisplacementMap` numa faixa colada à borda: o
+   deslocamento amostra pixels a até 15px de distância, mas o backdrop é recortado nos limites
+   do elemento — junto à borda não existe fundo para amostrar. Recombinar três canais RGB
+   triplicava o artefato.
+2. Mesmo sem deslocamento, `backdrop-filter` **aninhado** dentro de outro `backdrop-filter`
+   (o bisel dentro do painel, as peças dentro do tabuleiro) e **máscara aplicada a um elemento
+   com `backdrop-filter`** (o truque de `mask-composite` para o aro) reproduzem o serrilhado
+   sozinhos.
 
-Nada disso aparece sobre fundo liso — daí a malha de gradientes em movimento por trás de tudo,
-em opacidade baixa: ela é atmosfera, não protagonista.
-
-As casas do tabuleiro **não** usam `backdrop-filter`: centenas de superfícies desfocadas ao
-mesmo tempo derrubam o FPS. Elas ficam sobre uma base própria semiopaca — sem ela a malha
-atravessava o vidro e o xadrez sumia num degradê. O modo performance, no painel Tabuleiro,
-desliga desfoque, bisel e aro de uma vez.
+A regra que ficou no topo do CSS: uma superfície é uma cor sólida com uma borda. Simples,
+rápido e sem artefato possível.
 
 ### Responsivo
 
-Quatro faixas, todas verificadas medindo a geometria real (nada se sobrepõe, nada estoura):
+Cinco faixas, todas verificadas medindo a geometria real (nada se sobrepõe, nada estoura):
 
 | faixa | lateral | dock | tabuleiro |
 | --- | --- | --- | --- |
-| ≥1180px | 364px à direita | ícones + rótulos | até 620px |
-| 940–1180px | 318px | rótulos menores | limitado pela altura |
+| ≥1180px | 340px à direita | ícones + rótulos | até 604px |
+| 940–1180px | 306px | rótulos menores | limitado pela altura |
 | ≤940px | folha inferior | rótulos menores | 92vw |
 | ≤700px | folha inferior | só ícones | 94vw |
 | paisagem baixa | volta a ser lateral | só ícones | 52vw |
