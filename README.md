@@ -108,8 +108,28 @@ em N=8 os quatro terminam em menos de um milissegundo. Em N=16 a diferença é b
 **Resolver a partir daqui.** Completa o tabuleiro respeitando as rainhas que você já
 posicionou — ou avisa que aquela configuração parcial não fecha de jeito nenhum.
 
-**Árvore de busca.** A árvore de decisão desenhada em SVG enquanto cresce e é podada.
-Aparece num cartão flutuante durante a busca e em tamanho grande no painel.
+**Árvore de busca.** A árvore de decisão desenhada em SVG enquanto cresce e é podada. Aparece
+num cartão flutuante durante a busca e no painel lateral — mas o lugar para realmente analisá-la
+é o **explorador em tela cheia** (botão no painel Árvore, ou clique no cartão flutuante):
+
+- **roda do mouse** amplia sob o cursor, **arrastar** desloca, dois dedos ampliam no toque;
+  teclas <kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd> <kbd>Esc</kbd>, e botões de aproximar, afastar
+  e enquadrar tudo;
+- **clique num nó** para ver a decisão que ele representa (coluna, linha, profundidade,
+  situação), o caminho completo desde a raiz e **um tabuleiro reconstruído do instante exato**
+  em que a busca passou por ali — as rainhas dos ancestrais em branco e a casa em julgamento
+  destacada;
+- passar o mouse acende o caminho do nó até a raiz;
+- pausar, continuar e avançar passo a passo sem sair da tela, para congelar a busca num ponto
+  interessante e investigar;
+- **acompanhar** mantém o enquadramento colado na frente da busca enquanto ela roda.
+
+O layout é um Reingold–Tilford simplificado: as folhas ocupam colunas consecutivas na ordem de
+exploração e todo nó interno fica centrado sobre os próprios filhos. A primeira versão
+espalhava cada profundidade pela largura inteira e a estrutura sumia — dois nós irmãos ficavam
+a milhares de pixels um do outro. A vista inicial também não é "enquadrar tudo": com 900 nós
+isso dá 8% de zoom e pontos de meio pixel, então ela abre num zoom legível, centrada na frente
+da busca ou no caminho da solução.
 
 **Soluções.** Enumera todas as soluções de N ≤ 12 (92 para N=8, 14.200 para N=12), separa as
 fundamentais pelo grupo diedral D4 e permite girar/espelhar a solução escolhida.
@@ -128,6 +148,7 @@ src/
     board.ts       ataques, conflitos, heatmap, conversões
     solvers.ts     os quatro solvers, como geradores de eventos
     solutions.ts   enumeração por bitmask e simetrias D4
+    treeLayout.ts  posicionamento da árvore de busca (Reingold–Tilford)
   workers/       o worker que faz o trabalho pesado fora da main thread
   hooks/         estado do tabuleiro (com undo/redo), motor de animação, corrida…
   components/    tabuleiro, dock, menu lateral, árvore, painéis

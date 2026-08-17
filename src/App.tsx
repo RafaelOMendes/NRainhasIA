@@ -15,6 +15,7 @@ import { Dock, type PanelId } from './components/Dock';
 import { IconRedo, IconTrash, IconUndo } from './components/Icons';
 import { SearchTree } from './components/SearchTree';
 import { Sidebar } from './components/Sidebar';
+import { TreeExplorer } from './components/TreeExplorer';
 import { PanelBoard } from './components/panels/PanelBoard';
 import { PanelChallenge } from './components/panels/PanelChallenge';
 import { PanelRace } from './components/panels/PanelRace';
@@ -42,6 +43,7 @@ export default function App() {
   const [instantBusy, setInstantBusy] = useState(false);
   const [hintBusy, setHintBusy] = useState(false);
   const [metric, setMetric] = useState<'ms' | 'nodes' | 'backtracks'>('ms');
+  const [treeOpen, setTreeOpen] = useState(false);
   // A corrida tem tamanho próprio: em N=8 os quatro terminam antes de 1ms.
   const [raceN, setRaceN] = useState(16);
   const [solvedPulse, setSolvedPulse] = useState(false);
@@ -238,6 +240,8 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      // O explorador da árvore tem o próprio conjunto de teclas.
+      if (treeOpen) return;
 
       const mod = e.ctrlKey || e.metaKey;
       if (mod && e.key.toLowerCase() === 'z') {
@@ -308,7 +312,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [cursor, selectedId, queens, n, interactive, place, move, remove, undo, redo]);
+  }, [cursor, selectedId, queens, n, interactive, treeOpen, place, move, remove, undo, redo]);
 
   /* ---------------- painéis ---------------- */
 
@@ -361,7 +365,7 @@ export default function App() {
           />
         );
       case 'tree':
-        return <PanelTree runner={runner} />;
+        return <PanelTree runner={runner} onExplore={() => setTreeOpen(true)} />;
       case 'solutions':
         return (
           <PanelSolutions
@@ -496,8 +500,12 @@ export default function App() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -16 }}
               transition={{ type: 'spring', stiffness: 360, damping: 32 }}
+              onClick={() => setTreeOpen(true)}
+              role="button"
+              title="Abrir o explorador da árvore"
+              style={{ cursor: 'pointer' }}
             >
-              <h3>Árvore de busca</h3>
+              <h3>Árvore de busca · ampliar</h3>
               <SearchTree nodes={runner.tree} height={104} limit={700} />
             </motion.aside>
           )}
@@ -520,6 +528,12 @@ export default function App() {
         <Sidebar active={panel} onClose={() => setPanel(null)}>
           {panelContent()}
         </Sidebar>
+
+        <AnimatePresence>
+          {treeOpen && (
+            <TreeExplorer runner={runner} n={n} onClose={() => setTreeOpen(false)} />
+          )}
+        </AnimatePresence>
 
         <Dock
           active={panel}

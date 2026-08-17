@@ -451,6 +451,7 @@ button {
   gap: 2px;
   padding: 6px;
   border-radius: 14px;
+  user-select: none;
 }
 
 .dock-sep {
@@ -922,6 +923,164 @@ input[type='range']::-moz-range-thumb {
   font-weight: 500;
   letter-spacing: 0.03em;
   color: var(--txt-3);
+}
+
+/* ============================================================
+   Explorador da árvore
+   ============================================================ */
+
+.tree-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.tree-top {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.tree-body {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+
+.tree-canvas {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.045) 1px, transparent 0) 0 0 / 28px 28px;
+}
+.tree-canvas[data-panning='true'] {
+  cursor: grabbing;
+}
+.tree-canvas svg {
+  display: block;
+}
+
+.tree-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 40px;
+  text-align: center;
+}
+.tree-empty p {
+  max-width: 380px;
+}
+
+.tree-zoom {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--r-md);
+}
+.tree-zoom span {
+  font-size: 12px;
+  color: var(--txt-2);
+  font-variant-numeric: tabular-nums;
+  min-width: 46px;
+  text-align: center;
+}
+
+.tree-aside {
+  flex: 0 0 316px;
+  border-left: 1px solid var(--line);
+  padding: 18px 20px 24px;
+  overflow-y: auto;
+  background: var(--surface);
+}
+
+.tree-aside-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+}
+.ghost-glyph {
+  width: 40px;
+  height: 40px;
+  color: var(--surface-3);
+}
+
+.kv {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 7px 14px;
+  font-size: 13px;
+}
+.kv dt {
+  color: var(--txt-3);
+}
+.kv dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.mini-board {
+  width: 100%;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  display: block;
+}
+
+.path-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.path-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--txt-2);
+}
+.path-list li i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+@media (max-width: 860px) {
+  .tree-body {
+    flex-direction: column;
+  }
+  .tree-aside {
+    flex: 0 0 auto;
+    max-height: 44%;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
 }
 
 .sol-grid {

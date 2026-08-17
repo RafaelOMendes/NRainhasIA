@@ -28,10 +28,10 @@ export function Dock({
 }) {
   const navRef = useRef<HTMLElement>(null);
   const buttons = useRef(new Map<PanelId, HTMLButtonElement>());
-  const scrub = useRef<{ pointerId: number; movedAway: boolean } | null>(null);
-  /* Depois de arrastar, o navegador ainda dispara um clique no botão de origem —
-     este sinalizador impede que esse clique desfaça a aba escolhida no arraste. */
-  const swallowClick = useRef(false);
+  const scrub = useRef<{ pointerId: number; movedAway: boolean; startedOn: PanelId | null } | null>(
+    null,
+  );
+  const lastPointerUp = useRef(0);
 
   const idAt = (x: number, y: number): PanelId | null => {
     for (const [id, el] of buttons.current) {
@@ -46,7 +46,11 @@ export function Dock({
   const onPointerDown = (e: RPointerEvent<HTMLElement>) => {
     // O reservatório de rainhas tem o arraste dele; não é alvo de troca de aba.
     if (!(e.target as HTMLElement).closest('.dock-btn')) return;
-    scrub.current = { pointerId: e.pointerId, movedAway: false };
+    scrub.current = {
+      pointerId: e.pointerId,
+      movedAway: false,
+      startedOn: idAt(e.clientX, e.clientY),
+    };
     try {
       navRef.current?.setPointerCapture(e.pointerId);
     } catch {
@@ -63,24 +67,34 @@ export function Dock({
     onChange(over);
   };
 
+  /*
+    A troca acontece aqui, não no clique: com captura de ponteiro o navegador
+    entrega o `click` ao <nav> que capturou, e não ao botão — então o onClick do
+    botão simplesmente não dispara para o mouse. Era esse o bug de "só volta se
+    arrastar": um clique parado não produzia evento nenhum.
+  */
   const onPointerUp = (e: RPointerEvent<HTMLElement>) => {
     const s = scrub.current;
     if (!s || s.pointerId !== e.pointerId) return;
     scrub.current = null;
-    if (s.movedAway) swallowClick.current = true;
     try {
       navRef.current?.releasePointerCapture(e.pointerId);
     } catch {
       /* já liberado */
     }
+    lastPointerUp.current = performance.now();
+    if (s.movedAway) return; // o arraste já escolheu a aba
+    const at = idAt(e.clientX, e.clientY) ?? s.startedOn;
+    if (at) onChange(active === at ? null : at);
   };
 
-  /* O clique continua sendo o caminho do toque simples e do teclado. */
+  /*
+    Caminho do teclado (Enter/Espaço geram um clique sem ponteiro). A janela de
+    tempo ignora o clique sintético que alguns navegadores ainda entregam ao
+    botão logo após o pointerup, evitando alternar duas vezes.
+  */
   const onClick = (id: PanelId) => {
-    if (swallowClick.current) {
-      swallowClick.current = false;
-      return;
-    }
+    if (performance.now() - lastPointerUp.current < 500) return;
     onChange(active === id ? null : id);
   };
 
